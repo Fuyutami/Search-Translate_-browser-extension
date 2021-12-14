@@ -1,21 +1,28 @@
 let clickedEl = null
 
+document.addEventListener(
+	'contextmenu',
+	(e) => {
+		clickedEl = e.target
+	},
+	true
+)
 
-document.addEventListener("contextmenu", (e) => {
-    clickedEl = e.target
-},true)
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+	if (request.todo === 'getWord') {
+		sendResponse({ word: clickedEl.value })
+	}
 
+	if (request.translatedWord) {
+		const word = request.translatedWord
 
-chrome.runtime.onMessage.addListener(
-    function(request, sender, sendResponse) {
-      console.log(request)
-      if (request.todo === 'getWord') {
-        sendResponse({word: clickedEl.value})
-    }
-
-      if(request.translatedWord) {
-        clickedEl.value = request.translatedWord
-
-        window.dispatchEvent(new KeyboardEvent('keypress', {'key': 'a'}))
-      }
-    })
+		navigator.clipboard
+			.writeText(word)
+			.then(() => {
+				clickedEl.value = word
+			})
+			.catch((err) => {
+				console.log('Could not write word to the clipboard!', err)
+			})
+	}
+})
